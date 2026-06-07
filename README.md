@@ -2360,3 +2360,5 @@ PRIMARY KEY
 **End of System Design Notes (Part 2)**
 
 ![System Design Cheat Sheet](assets/system-design-cheat-sheet.png)
+
+![System Design Part 2 Cheat Sheet](assets/system-design-part-2-cheat-sheet.png)
