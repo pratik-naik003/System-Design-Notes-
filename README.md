@@ -1136,10 +1136,7 @@ Non-Functional Requirement =
 
 DNS =
     Domain → IP Address
-```"# System-Design-Notes-" 
-
-![System Design Cheat Sheet](assets/system-design-cheat-sheet.png)
-
+```
 
 # System Design Notes (Part 2)
 
@@ -2361,3 +2358,5 @@ PRIMARY KEY
 
 ---
 **End of System Design Notes (Part 2)**
+
+![System Design Cheat Sheet](assets/system-design-cheat-sheet.png)
