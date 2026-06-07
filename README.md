@@ -1136,7 +1136,10 @@ Non-Functional Requirement =
 
 DNS =
     Domain → IP Address
+
 ```
+
+![System Design Cheat Sheet](assets/system-design-cheat-sheet.png)
 
 # System Design Notes (Part 2)
 
@@ -2359,6 +2362,1129 @@ PRIMARY KEY
 ---
 **End of System Design Notes (Part 2)**
 
-![System Design Cheat Sheet](assets/system-design-cheat-sheet.png)
 
 ![System Design Part 2 Cheat Sheet](assets/system-design-part-2-cheat-sheet.png)
+
+
+# System Design Notes (Part 3)
+
+## DB Joins, NoSQL, Types of NoSQL Databases, Cache, Cache Strategies & Cache Eviction Policies
+
+---
+
+# Chapter 21: Database Joins
+
+## Why Joins?
+
+Joins are used to:
+
+- Connect multiple tables
+- Maintain relationships between entities
+- Retrieve related data efficiently
+
+Example:
+
+```text
+Users ↔ Blogs
+Students ↔ Courses
+Posts ↔ Comments
+```
+
+---
+
+# Types of Relationships
+
+## 1. One-to-Many Relationship
+
+### Example: User → Blogs
+
+One user can write multiple blogs.
+
+### Users Table
+
+| id | name |
+|----|------|
+| 1 | Akshay |
+| 2 | Gaurav |
+
+### Blogs Table
+
+| id | content | author_id |
+|----|----------|-----------|
+| 1 | HTML | 1 |
+| 2 | AI | 2 |
+| 3 | System Design | 1 |
+
+Relationship:
+
+```text
+One User
+    ↓
+Many Blogs
+```
+
+---
+
+## 2. Many-to-One Relationship
+
+Same relationship viewed in reverse.
+
+```text
+Many Blogs
+      ↓
+ One User
+```
+
+Multiple blogs belong to one user.
+
+---
+
+## 3. Many-to-Many Relationship
+
+### Example: LMS System
+
+Entities:
+
+```text
+Students
+Courses
+```
+
+A student can enroll in many courses.
+
+A course can have many students.
+
+---
+
+### Problem
+
+Cannot directly maintain relationship.
+
+Need:
+
+```text
+Junction Table
+```
+
+---
+
+### Students Table
+
+| id | name |
+|----|------|
+| 1 | Akshay |
+| 2 | Gaurav |
+
+---
+
+### Courses Table
+
+| id | course_name |
+|----|-------------|
+| 1 | Master Java |
+| 2 | Master AI |
+
+---
+
+### Student_Course Table
+
+| id | student_id | course_id |
+|----|-----------|-----------|
+| 1 | 1 | 1 |
+| 2 | 1 | 2 |
+| 3 | 2 | 1 |
+| 4 | 2 | 2 |
+
+---
+
+### Structure
+
+```text
+Students
+     ↕
+Student_Course
+     ↕
+Courses
+```
+
+---
+
+## 4. One-to-One Relationship
+
+### Example: Content Platform
+
+Content Types:
+
+- Blog
+- Audio
+- Video
+
+---
+
+### Approach 1
+
+Store everything in one table.
+
+Problems:
+
+- Huge table
+- Slow filtering
+- Difficult maintenance
+
+---
+
+### Approach 2 (Better)
+
+Separate tables:
+
+```text
+Contents
+Videos
+Audios
+Blogs
+```
+
+Contents table stores:
+
+```text
+id
+content_name
+content_type
+content_id
+```
+
+---
+
+Actual data remains in:
+
+```text
+Videos Table
+Audios Table
+Blogs Table
+```
+
+---
+
+### Example
+
+```text
+Content ID = 1
+Type = Video
+```
+
+Fetch:
+
+```text
+Videos Table
+where id = 1
+```
+
+---
+
+# Quick Relationship Revision
+
+| Relationship | Example |
+|-------------|----------|
+| One-to-One | User ↔ Profile |
+| One-to-Many | User ↔ Blogs |
+| Many-to-One | Blogs ↔ User |
+| Many-to-Many | Students ↔ Courses |
+
+---
+
+# Chapter 22: Non-Relational Database (NoSQL)
+
+## Why NoSQL?
+
+SQL becomes difficult when:
+
+- Data grows rapidly
+- Relationships become complex
+- Schema changes frequently
+
+---
+
+## SQL Problems
+
+### 1. Difficult Horizontal Scaling
+
+SQL requires maintaining relationships across servers.
+
+Hard to scale.
+
+---
+
+### 2. Fixed Schema
+
+Example:
+
+```sql
+Users
+id
+name
+phone
+```
+
+Adding new fields frequently becomes difficult.
+
+---
+
+### 3. Complex Relationships
+
+Large systems require:
+
+```text
+Users
+Posts
+Comments
+Images
+Videos
+Likes
+```
+
+Many tables and joins.
+
+---
+
+# NoSQL Solution
+
+NoSQL stores data as:
+
+```text
+Documents
+Key-Value Pairs
+Graphs
+Columns
+```
+
+instead of traditional tables.
+
+---
+
+# Advantages of NoSQL
+
+## 1. Easy Scaling
+
+Supports:
+
+- Vertical Scaling
+- Horizontal Scaling
+
+---
+
+## 2. Schema-less
+
+Every document can have different fields.
+
+Example:
+
+### Document 1
+
+```json
+{
+  "userId": 1,
+  "image": "photo.jpg"
+}
+```
+
+---
+
+### Document 2
+
+```json
+{
+  "userId": 2,
+  "content": "Hello World"
+}
+```
+
+---
+
+### Document 3
+
+```json
+{
+  "userId": 3,
+  "title": "Java",
+  "description": "Java Tutorial"
+}
+```
+
+All valid.
+
+---
+
+## 3. Fewer Relationships
+
+Documents are self-contained.
+
+Example:
+
+```json
+{
+  "courseId": 1,
+  "name": "Java",
+  "lessons": [],
+  "comments": []
+}
+```
+
+Everything stored together.
+
+---
+
+# Real-World NoSQL Usage
+
+| Company | Database |
+|----------|----------|
+| Netflix | Cassandra |
+| Amazon | DynamoDB |
+| Meta | HBase |
+| Uber | MongoDB |
+| X (Twitter) | Redis |
+
+---
+
+# SQL vs NoSQL
+
+| SQL | NoSQL |
+|------|--------|
+| Strong Consistency | High Availability |
+| Fixed Schema | Flexible Schema |
+| Tables | Documents |
+| Complex Relationships | Self-contained Data |
+| Slower Scaling | Easier Scaling |
+
+---
+
+# When to Use SQL?
+
+Choose SQL when:
+
+- Payments
+- Banking
+- Transactions
+- Financial Data
+
+Need:
+
+```text
+Consistency > Availability
+```
+
+---
+
+# When to Use NoSQL?
+
+Choose NoSQL when:
+
+- Large Scale Applications
+- Social Media
+- Real-Time Systems
+- Unstructured Data
+
+Need:
+
+```text
+Availability + Scalability
+```
+
+---
+
+# Chapter 23: Types of NoSQL Databases
+
+---
+
+# 1. Key-Value Database
+
+Stores:
+
+```text
+Key → Value
+```
+
+Example:
+
+```json
+{
+  "user:1": {
+    "name": "Pratik"
+  }
+}
+```
+
+---
+
+## Features
+
+- Fast
+- Simple
+- No relationships
+- Schema-less
+
+---
+
+## Uses
+
+- Cache
+- Cookies
+- Sessions
+
+---
+
+## Examples
+
+- Redis
+- DynamoDB
+
+---
+
+# 2. Column Database
+
+Stores data column-wise.
+
+---
+
+### Traditional SQL
+
+Reads:
+
+```text
+ID → Name → Marks
+```
+
+for every row.
+
+---
+
+### Column Database
+
+Reads:
+
+```text
+Marks
+Marks
+Marks
+Marks
+```
+
+directly.
+
+---
+
+## Benefits
+
+- Faster Analytics
+- Faster Aggregations
+- Better Reporting
+
+---
+
+## Drawback
+
+Writes are slower.
+
+---
+
+## Examples
+
+- Google BigQuery
+- Amazon Redshift
+- Snowflake
+
+---
+
+# 3. Graph Database
+
+Stores:
+
+```text
+Nodes
+Edges
+```
+
+---
+
+## Components
+
+### Node
+
+Entity
+
+Example:
+
+```text
+Student
+Course
+College
+```
+
+---
+
+### Edge
+
+Relationship
+
+Example:
+
+```text
+Enrolled In
+Studies In
+Provides
+```
+
+---
+
+## Special Feature
+
+Relationships can have properties.
+
+Example:
+
+```text
+Enrolled
+Year = 2025
+Marks = 90
+```
+
+---
+
+## Uses
+
+- Recommendation Systems
+- Fraud Detection
+- Social Networks
+- Pattern Analysis
+
+---
+
+## Examples
+
+- Neo4j
+- JanusGraph
+
+---
+
+# 4. Document Database
+
+Stores:
+
+```json
+{
+  "userId": 1,
+  "name": "Pratik",
+  "skills": ["AI", "ML"]
+}
+```
+
+---
+
+## Features
+
+- JSON Documents
+- Flexible
+- Schema-less
+
+---
+
+## Uses
+
+### Logging Systems
+
+```text
+Error Logs
+Warning Logs
+System Logs
+```
+
+---
+
+### User Profiles
+
+Different users can have different fields.
+
+---
+
+### Social Media Content
+
+- Images
+- Videos
+- Text
+
+all in one document.
+
+---
+
+## Examples
+
+- MongoDB
+- CouchDB
+
+---
+
+# Chapter 24: Cache
+
+---
+
+# What is Cache?
+
+Cache is a fast memory layer that stores frequently accessed data.
+
+Purpose:
+
+```text
+Reduce Latency
+Increase Speed
+Reduce DB Load
+```
+
+---
+
+# Without Cache
+
+```text
+User
+ ↓
+Backend
+ ↓
+Database
+```
+
+Every request hits database.
+
+---
+
+# With Cache
+
+```text
+User
+ ↓
+Backend
+ ↓
+Cache
+ ↓
+Database
+```
+
+Database hit only when required.
+
+---
+
+# Types of Cache
+
+## Client Side Cache
+
+Stored in:
+
+- Browser
+- Mobile App
+
+---
+
+## Server Side Cache
+
+Stored in:
+
+- Backend
+- Redis
+- Memcached
+
+---
+
+## Database Cache
+
+Database internally stores frequently used queries.
+
+---
+
+# Cache Hit
+
+Data found in cache.
+
+```text
+User
+ ↓
+Cache
+```
+
+Fast response.
+
+---
+
+# Cache Miss
+
+Data not found.
+
+```text
+User
+ ↓
+Cache
+ ↓
+Database
+```
+
+Slower response.
+
+---
+
+# TTL (Time To Live)
+
+Defines:
+
+```text
+How long data stays in cache
+```
+
+After TTL expires:
+
+```text
+Data Removed
+```
+
+---
+
+# Why Not Store Everything in Cache?
+
+Because:
+
+- Cache size is limited
+- Cache must remain fast
+- Large cache becomes slow
+
+---
+
+# Cache Storage Format
+
+```text
+Key → Value + TTL
+```
+
+Example:
+
+```text
+course:1
+↓
+Java Course Data
+↓
+TTL = 1 Hour
+```
+
+---
+
+# Chapter 25: Cache Strategies
+
+---
+
+# 1. Read Through Cache (RTC)
+
+## Read
+
+```text
+Cache First
+```
+
+If miss:
+
+```text
+Cache → Database
+```
+
+---
+
+## Write
+
+```text
+Directly Database
+```
+
+---
+
+### Best For
+
+Frequently read data.
+
+---
+
+# 2. Write Through Cache (WTC)
+
+## Write Flow
+
+```text
+Application
+   ↓
+Cache
+   ↓
+Database
+```
+
+Both updated together.
+
+---
+
+### Benefit
+
+Cache always contains latest data.
+
+---
+
+### Example
+
+```text
+Stock Market Prices
+```
+
+---
+
+# 3. Write Around Cache (WAC)
+
+## Write
+
+```text
+Application
+ ↓
+Database
+```
+
+---
+
+## Read
+
+```text
+Cache First
+```
+
+If miss:
+
+```text
+Database → Cache
+```
+
+---
+
+### Example
+
+```text
+Twitter (X)
+```
+
+New tweet not cached immediately.
+
+Popular tweet gets cached later.
+
+---
+
+# 4. Write Back Cache (WBC)
+
+## Write
+
+```text
+Application
+ ↓
+Cache
+```
+
+Immediately completed.
+
+---
+
+## Database Update
+
+```text
+Asynchronous
+```
+
+Later.
+
+---
+
+### Benefit
+
+Very Fast Writes
+
+---
+
+### Tradeoff
+
+```text
+Speed > Consistency
+```
+
+---
+
+### Example
+
+Food Delivery Apps
+
+- Swiggy
+- Zomato
+
+Order status changes rapidly.
+
+---
+
+# Cache Strategy Comparison
+
+| Strategy | Read | Write |
+|-----------|--------|--------|
+| RTC | Cache First | DB |
+| WTC | Cache | Cache + DB |
+| WAC | Cache First | DB |
+| WBC | Cache | Async DB |
+
+---
+
+# Chapter 26: Cache Eviction Policies
+
+Eviction = Removing old cache data.
+
+---
+
+# 1. LRU
+
+## Least Recently Used
+
+Remove:
+
+```text
+Data not used recently
+```
+
+Example:
+
+```text
+iPhone 11 Search
+```
+
+when users search:
+
+```text
+iPhone 17
+```
+
+---
+
+# 2. MRU
+
+## Most Recently Used
+
+Remove:
+
+```text
+Most Recently Used Data
+```
+
+Used in:
+
+- Video Streaming
+- Coupon Systems
+
+---
+
+# 3. LFU
+
+## Least Frequently Used
+
+Remove:
+
+```text
+Least Accessed Data
+```
+
+Example:
+
+```text
+Plant Search
+```
+
+searched once.
+
+---
+
+# 4. FIFO
+
+## First In First Out
+
+Remove:
+
+```text
+Oldest Inserted Data
+```
+
+Queue behavior.
+
+---
+
+# 5. LIFO
+
+## Last In First Out
+
+Remove:
+
+```text
+Latest Inserted Data
+```
+
+Stack behavior.
+
+---
+
+# Eviction Policy Comparison
+
+| Policy | Removes |
+|----------|----------|
+| LRU | Least Recently Used |
+| MRU | Most Recently Used |
+| LFU | Least Frequently Used |
+| FIFO | First Inserted |
+| LIFO | Last Inserted |
+
+---
+
+# Final Revision Sheet
+
+```text
+DB Relationships:
+1:1
+1:N
+N:1
+N:N
+
+NoSQL Advantages:
+- Easy Scaling
+- Schema-less
+- Flexible
+
+NoSQL Types:
+- Key Value
+- Column
+- Graph
+- Document
+
+Cache:
+- Fast Storage
+- Reduce Latency
+- Reduce DB Load
+
+Cache Terms:
+- Cache Hit
+- Cache Miss
+- TTL
+
+Cache Strategies:
+RTC
+WTC
+WAC
+WBC
+
+Eviction Policies:
+LRU
+MRU
+LFU
+FIFO
+LIFO
+```
+
+---
+**End of System Design Notes (Part 3)** :contentReference[oaicite:0]{index=0}
+
+![System Design Part 3 Cheat Sheet](assets/system-design-part-3-cheat-sheet.png)
