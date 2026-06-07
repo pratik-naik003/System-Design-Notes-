@@ -4759,4 +4759,1004 @@ CA → Single Database
 
 ![System Design Part 4 Cheat Sheet](assets/system-design-part-4-cheat-sheet.png)
 
+# System Design Notes (Part 5)
+
+## Message Queues, Pub-Sub, Fault Tolerance, Monitoring & Observability
+
+---
+
+# Chapter 36: Message Queue (MQ)
+
+## What is a Message Queue?
+
+A Message Queue (MQ) is a middleware component that acts as a:
+
+- Buffer
+- Broker
+- Communication Layer
+
+between services.
+
+It helps asynchronous communication between applications. :contentReference[oaicite:0]{index=0}
+
+---
+
+# Types of Requests
+
+## 1. Synchronous (Sync)
+
+The caller waits for a response.
+
+```text
+Client
+  ↓
+Server
+  ↓
+Response
+```
+
+Examples:
+
+- Banking Transactions
+- Payment Processing
+- Inventory Updates
+- Authentication
+
+---
+
+### Characteristics
+
+✅ Immediate response required
+
+✅ Strong consistency
+
+❌ Caller must wait
+
+---
+
+## 2. Asynchronous (Async)
+
+The caller sends a request and continues working.
+
+```text
+Client
+  ↓
+Request Sent
+  ↓
+Continue Working
+```
+
+Response may come later or not at all.
+
+---
+
+### Characteristics
+
+✅ Faster systems
+
+✅ Better scalability
+
+✅ Decoupled services
+
+---
+
+# E-Commerce Example
+
+User places an order.
+
+Operations:
+
+### Synchronous
+
+```text
+Update Inventory
+```
+
+Must happen immediately.
+
+---
+
+### Asynchronous
+
+```text
+Send Email
+Send SMS
+Send WhatsApp Notification
+Notify Delivery Partner
+```
+
+Can happen later.
+
+---
+
+# Golden Rule
+
+Use Async when:
+
+```text
+Fire Request
+&
+Forget Request
+```
+
+The application does not need an immediate response.
+
+---
+
+# Examples of Async Systems
+
+- Email Services
+- SMS Services
+- WhatsApp Notifications
+- Broadcasting Systems
+- Live Streaming
+- OTP Systems
+- Analytics Processing
+
+---
+
+# Why Message Queue?
+
+Without MQ:
+
+```text
+Application
+     ↓
+Email Service
+```
+
+Problems:
+
+- Tight coupling
+- Failure handling needed
+- Increased load
+
+---
+
+With MQ:
+
+```text
+Application
+      ↓
+ Message Queue
+      ↓
+ Email Service
+```
+
+Benefits:
+
+- Decoupling
+- Retry Mechanisms
+- Load Handling
+- Failure Recovery
+
+---
+
+# Producer & Consumer
+
+## Producer
+
+Creates messages.
+
+Also called:
+
+```text
+Publisher
+```
+
+---
+
+## Consumer
+
+Processes messages.
+
+Also called:
+
+```text
+Subscriber
+```
+
+---
+
+# Responsibilities of MQ
+
+### 1. Hold Requests
+
+Stores requests temporarily.
+
+---
+
+### 2. Route Requests
+
+Sends messages to correct consumers.
+
+---
+
+### 3. Handle Failures
+
+Retries failed messages.
+
+---
+
+### 4. Handle Load
+
+Prevents overloading consumers.
+
+---
+
+# FIFO Queue
+
+FIFO =
+
+```text
+First In First Out
+```
+
+Example:
+
+```text
+Request1
+Request2
+Request3
+```
+
+Processed in same order.
+
+---
+
+# Strict Ordered Queue
+
+```text
+1 → 2 → 3 → 4
+```
+
+If 3 fails:
+
+```text
+4 waits
+```
+
+Problem:
+
+System becomes blocked.
+
+---
+
+# Unordered Queue
+
+If request 3 fails:
+
+```text
+1 ✓
+2 ✓
+3 ✗
+4 ✓
+5 ✓
+```
+
+Processing continues.
+
+Preferred approach.
+
+---
+
+# Priority Queue
+
+Every message gets a priority.
+
+Example:
+
+| Request | Priority |
+|----------|-----------|
+| R1 | 10 |
+| R2 | 3 |
+| R3 | 8 |
+| R4 | 1 |
+
+Lower value = Higher Priority.
+
+Execution:
+
+```text
+R4
+R2
+R3
+R1
+```
+
+---
+
+# Pull-Based Queue
+
+Consumer asks for messages.
+
+```text
+Consumer
+    ↓ Pull
+Message Queue
+```
+
+Consumer decides when to fetch.
+
+---
+
+# Push-Based Queue
+
+MQ pushes messages.
+
+```text
+Message Queue
+      ↓ Push
+Consumer
+```
+
+Queue initiates communication.
+
+---
+
+# Chapter 37: Pub-Sub Model
+
+Pub-Sub =
+
+```text
+Publish Subscribe
+```
+
+Architecture:
+
+```text
+Publishers
+      ↓
+ Message Queue
+      ↓
+Subscribers
+```
+
+---
+
+# Workflow
+
+### Publisher
+
+Publishes messages.
+
+---
+
+### MQ
+
+Stores messages.
+
+---
+
+### Subscriber
+
+Consumes messages.
+
+---
+
+# Responsibilities in Pub-Sub
+
+### Store Requests
+
+Hold messages safely.
+
+---
+
+### Deliver Requests
+
+Send messages to subscribers.
+
+---
+
+### Health Monitoring
+
+Check subscriber availability.
+
+---
+
+### Retry Failed Requests
+
+Handle unsuccessful processing.
+
+---
+
+# Message Ordering
+
+Async systems generally:
+
+```text
+Do NOT Guarantee Order
+```
+
+If order is important:
+
+Use:
+
+```text
+Priority Queue
+```
+
+or custom ordering logic.
+
+---
+
+# Message Consumption
+
+Consumers may process:
+
+```text
+Any Message
+At Any Time
+```
+
+depending on:
+
+- Priority
+- Availability
+- Queue Strategy
+
+---
+
+# Poison Messages
+
+Messages that repeatedly fail.
+
+Examples:
+
+- Invalid Data
+- Corrupted Payload
+- Unsupported Request
+
+Problem:
+
+```text
+Consumes Resources
+Without Success
+```
+
+---
+
+# Dead Letter Queue (DLQ)
+
+DLQ =
+
+```text
+Dead Letter Queue
+```
+
+Stores failed messages.
+
+Architecture:
+
+```text
+Producer
+    ↓
+Main Queue
+    ↓
+Consumer
+
+Failed Messages
+       ↓
+      DLQ
+```
+
+---
+
+# Benefits of DLQ
+
+### Failure Tracking
+
+Know which requests failed.
+
+---
+
+### Retry Support
+
+Can retry later.
+
+---
+
+### Debugging
+
+Analyze root cause.
+
+---
+
+# Duplicate Message Handling
+
+MQ ensures:
+
+```text
+Processed Message
+≠
+Processed Again
+```
+
+Benefits:
+
+- No duplicate transactions
+- No duplicate emails
+- No duplicate payments
+
+---
+
+# Where to Use MQ?
+
+### Async Systems
+
+- Emails
+- SMS
+- Notifications
+
+---
+
+### Analytics
+
+- User Tracking
+- Event Logging
+
+---
+
+### Load Balancing
+
+Distribute workload.
+
+---
+
+### Deferred Processing
+
+Examples:
+
+- Daily Reports
+- Scheduled Jobs
+- Batch Processing
+
+---
+
+# When NOT to Use MQ?
+
+### Real-Time Systems
+
+Need instant response.
+
+---
+
+### Low Traffic Applications
+
+MQ adds unnecessary cost.
+
+---
+
+### Acknowledgement Required
+
+When caller must wait for response.
+
+---
+
+# Chapter 38: Faults and Errors
+
+A fault occurs when the system does not behave as expected. :contentReference[oaicite:1]{index=1}
+
+---
+
+# Types of Faults
+
+## 1. Hardware Faults
+
+Infrastructure problems.
+
+Examples:
+
+- Server Crash
+- Disk Failure
+- Power Failure
+- Network Cable Damage
+- Memory Exhaustion
+- Overheating
+- Database Failure
+
+---
+
+### Nature
+
+```text
+Random
+Unpredictable
+```
+
+---
+
+### Solution
+
+- Replication
+- Redundancy
+- Monitoring
+- Backup Systems
+
+---
+
+# 2. Software Faults
+
+Caused by code issues.
+
+Examples:
+
+- Bugs
+- Unhandled Exceptions
+- Edge Cases
+- Configuration Errors
+- Deployment Issues
+- Merge Conflicts
+
+---
+
+### Characteristics
+
+```text
+Deterministic
+```
+
+Can usually be reproduced.
+
+---
+
+### Prevention
+
+- Testing
+- Code Reviews
+- Proper Logging
+- Exception Handling
+- CI/CD Validation
+
+---
+
+# 3. Human Faults
+
+Most unpredictable fault category.
+
+Examples:
+
+- Wrong Deployment
+- Incorrect Configuration
+- Quick Fixes
+- Operational Mistakes
+
+---
+
+### Prevention
+
+- Documentation
+- Reviews
+- Checklists
+- Standard Procedures
+
+---
+
+# Fault Comparison
+
+| Type | Nature |
+|--------|----------|
+| Hardware | Random |
+| Software | Deterministic |
+| Human | Unpredictable |
+
+---
+
+# Chapter 39: Monitoring & Observability
+
+After deployment:
+
+```text
+Building Product
+       ≠
+Maintaining Product
+```
+
+Monitoring ensures systems stay healthy.
+
+---
+
+# Objectives
+
+### Detect Errors
+
+Find issues early.
+
+---
+
+### Monitor Components
+
+Servers, databases, APIs.
+
+---
+
+### Collect Logs
+
+Track requests.
+
+---
+
+### Root Cause Analysis (RCA)
+
+Identify failures quickly.
+
+---
+
+### Alerting
+
+Notify teams before failures become severe.
+
+---
+
+# Microservice Monitoring
+
+Need to monitor:
+
+### APIs
+
+Performance and errors.
+
+---
+
+### Infrastructure
+
+CPU, memory, network.
+
+---
+
+# Chapter 40: API Monitoring
+
+---
+
+# 1. Throughput
+
+Throughput =
+
+```text
+Requests Per Second (RPS)
+```
+
+Example:
+
+```text
+10,000 Requests / Second
+```
+
+Monitor approaching limits.
+
+---
+
+# 2. Error Monitoring
+
+Track:
+
+### 4xx Errors
+
+Client errors.
+
+---
+
+### 5xx Errors
+
+Server errors.
+
+---
+
+### 3xx Responses
+
+Redirects.
+
+---
+
+Need:
+
+- Logs
+- Alerts
+- RCA
+
+---
+
+# 3. Health Checks
+
+Ensure APIs return:
+
+```text
+200 OK
+```
+
+Types:
+
+- Active Health Check
+- Passive Health Check
+
+---
+
+# 4. Latency Monitoring
+
+Latency =
+
+```text
+Response Time
+```
+
+---
+
+# Why Average is Misleading?
+
+Example:
+
+```text
+Most Requests = 1 sec
+
+Few Requests = 30 sec
+```
+
+Average hides the problem.
+
+---
+
+# Percentiles
+
+Used instead of averages.
+
+---
+
+## P50
+
+50% requests finish within this time.
+
+---
+
+## P90
+
+90% requests finish within this time.
+
+---
+
+## P99
+
+99% requests finish within this time.
+
+---
+
+# Example
+
+```text
+P50 = 4 sec
+
+P90 = 12 sec
+```
+
+Meaning:
+
+```text
+50% Requests < 4 sec
+
+90% Requests < 12 sec
+```
+
+Large gap indicates optimization opportunities.
+
+---
+
+# Chapter 41: Machine Monitoring
+
+Monitor hardware health continuously.
+
+---
+
+# 1. CPU Usage
+
+Track processor utilization.
+
+Example Alert:
+
+```text
+CPU > 75%
+```
+
+---
+
+# 2. Memory Usage
+
+Monitor RAM consumption.
+
+Example Alert:
+
+```text
+Memory > 90%
+```
+
+---
+
+# 3. Disk I/O
+
+Monitor:
+
+- Read Operations
+- Write Operations
+
+---
+
+# 4. Network Usage
+
+Track:
+
+- Bandwidth
+- Packet Flow
+- Network Traffic
+
+---
+
+# Machine Monitoring Metrics
+
+| Metric | Purpose |
+|----------|----------|
+| CPU | Processing Load |
+| Memory | RAM Usage |
+| Disk I/O | Storage Performance |
+| Network | Connectivity & Traffic |
+
+---
+
+# Quick Revision Sheet
+
+```text
+Message Queue:
+Buffer Between Services
+
+Producer = Publisher
+
+Consumer = Subscriber
+
+Queue Types:
+FIFO
+Priority Queue
+Push Queue
+Pull Queue
+
+Pub-Sub:
+Publisher → MQ → Subscriber
+
+DLQ:
+Stores Failed Messages
+
+Faults:
+Hardware
+Software
+Human
+
+Monitoring:
+Logs
+Metrics
+Alerts
+Health Checks
+
+API Metrics:
+Throughput
+Error Rate
+Latency
+Health
+
+Latency:
+P50
+P90
+P99
+
+Machine Metrics:
+CPU
+Memory
+Disk I/O
+Network
+```
+
+---
+
+**End of System Design Notes (Part 5)**  
+Based on Chapters 36–41 (Message Queue, Pub-Sub, Faults, Monitoring & Observability). :contentReference[oaicite:2]{index=2}
+
+![System Design Part 5 Cheat Sheet](assets/system-design-part-5-cheat-sheet.png)
+
+
+
 
