@@ -1137,3 +1137,1227 @@ Non-Functional Requirement =
 DNS =
     Domain → IP Address
 ```"# System-Design-Notes-" 
+
+![System Design Cheat Sheet](assets/system-design-cheat-sheet.png)
+
+
+# System Design Notes (Part 2)
+
+## DNS Architecture, APIs, REST APIs, Databases & SQL
+
+---
+
+# Chapter 13: DNS System Architecture
+
+## What is DNS?
+
+DNS (Domain Name System) converts:
+
+```text
+google.com
+```
+
+into
+
+```text
+IP Address
+```
+
+because computers communicate using IP addresses.
+
+---
+
+## DNS Lookup Flow
+
+```text
+Browser
+   ↓
+DNS Resolver
+   ↓
+Root Server
+   ↓
+TLD Server
+   ↓
+Authoritative Name Server
+   ↓
+IP Address
+   ↓
+Website
+```
+
+---
+
+## DNS Resolver
+
+Usually provided by:
+
+- ISP (Internet Service Provider)
+- Router
+- Public DNS (Google DNS, Cloudflare DNS)
+
+Responsibility:
+
+```text
+Resolve domain names into IP addresses
+```
+
+---
+
+## Root Servers
+
+There are:
+
+```text
+13 Root Server Groups
+```
+
+named:
+
+```text
+A → M
+```
+
+Root servers do NOT know website IPs.
+
+They only know:
+
+```text
+Which TLD Server should be contacted
+```
+
+---
+
+## Top Level Domain (TLD)
+
+Examples:
+
+```text
+.com
+.net
+.org
+.edu
+.gov
+.in
+.uk
+```
+
+TLD servers know:
+
+```text
+Which Authoritative Name Server
+handles a domain
+```
+
+---
+
+## Authoritative Name Server
+
+Stores actual DNS records.
+
+Examples:
+
+- GoDaddy
+- Hostinger
+- Namecheap
+
+Returns:
+
+```text
+Actual IP Address
+```
+
+Example:
+
+```text
+telesco.com
+↓
+192.xxx.xxx.xxx
+```
+
+---
+
+# DNS Caching
+
+Without caching:
+
+```text
+Root Server Call
+TLD Call
+Authoritative Server Call
+```
+
+would happen for every request.
+
+---
+
+## Cache Locations
+
+### Browser Cache
+
+Chrome, Firefox, Edge
+
+---
+
+### OS Cache
+
+Operating System stores DNS records.
+
+---
+
+### DNS Resolver Cache
+
+ISP stores common DNS records.
+
+---
+
+# DNS Zone
+
+A zone contains:
+
+```text
+Main Domain
++
+All Subdomains
+```
+
+Example:
+
+```text
+telesco.com
+docs.telesco.com
+courses.telesco.com
+blog.telesco.com
+```
+
+All belong to one zone.
+
+---
+
+# DNS Quick Revision
+
+```text
+Root Server
+   ↓
+TLD Server
+   ↓
+Authoritative Server
+   ↓
+IP Address
+```
+
+---
+
+# Chapter 14: Application Programming Interface (API)
+
+## What is API?
+
+API =
+
+```text
+Application Programming Interface
+```
+
+API acts as a bridge between applications.
+
+---
+
+## Real World Example
+
+Applications:
+
+- Uber
+- Ola
+- Rapido
+- Zomato
+- Swiggy
+
+use:
+
+```text
+Google Maps API
+```
+
+instead of creating maps themselves.
+
+---
+
+# Why APIs Exist?
+
+Suppose a Movie Application already stores:
+
+- Ratings
+- Reviews
+- Movies
+
+Another developer wants the same data.
+
+Options:
+
+### Option 1
+
+Build everything again ❌
+
+### Option 2
+
+Use APIs ✅
+
+---
+
+# Why Not Give Database Access?
+
+Problems:
+
+- Data corruption
+- Security risks
+- Data deletion
+- Sensitive information leakage
+
+Architecture:
+
+```text
+Database
+   ↑
+Application
+   ↑
+API
+   ↑
+Client
+```
+
+---
+
+# API Use Cases
+
+## Application ↔ Application
+
+Example:
+
+```text
+Google Maps API
+```
+
+---
+
+## Frontend ↔ Backend
+
+Example:
+
+```text
+React Frontend
+      ↓
+REST API
+      ↓
+Node Backend
+```
+
+---
+
+# API Benefits
+
+- Reusability
+- Security
+- Modularity
+- Easy Integration
+- Language Independent
+
+---
+
+# Chapter 15: Types of APIs
+
+---
+
+# 1. REST API
+
+REST =
+
+```text
+Representational State Transfer
+```
+
+Uses:
+
+```text
+JSON
+```
+
+Advantages:
+
+- Simple
+- Lightweight
+- Easy Maintenance
+
+---
+
+# 2. SOAP API
+
+SOAP =
+
+```text
+Simple Object Access Protocol
+```
+
+Uses:
+
+```text
+XML
+```
+
+Characteristics:
+
+- Heavyweight
+- Older Technology
+- Used in Legacy Systems
+
+---
+
+# JSON vs XML
+
+## JSON
+
+```json
+{
+  "name": "Pratik"
+}
+```
+
+---
+
+## XML
+
+```xml
+<user>
+   <name>Pratik</name>
+</user>
+```
+
+---
+
+# 3. GraphQL
+
+GraphQL provides:
+
+```text
+Single Endpoint
+```
+
+Frontend sends queries.
+
+Example:
+
+```graphql
+{
+  user {
+    name
+    email
+  }
+}
+```
+
+Advantages:
+
+- Flexible
+- Avoid Over-Fetching
+- Single Endpoint
+
+---
+
+# 4. gRPC
+
+gRPC =
+
+```text
+Google Remote Procedure Call
+```
+
+Uses:
+
+```text
+Protocol Buffers
+```
+
+instead of:
+
+- JSON
+- XML
+
+Advantages:
+
+- Smaller Payload
+- Faster Communication
+- Low Latency
+
+Used in:
+
+```text
+Microservices
+```
+
+---
+
+# 5. WebSocket
+
+Used for:
+
+- Chats
+- Notifications
+- Live Updates
+- Real-Time Applications
+
+---
+
+## Traditional API
+
+```text
+Request
+   ↓
+Response
+```
+
+---
+
+## WebSocket
+
+```text
+Client
+  ↔
+Server
+```
+
+Two-way communication.
+
+Examples:
+
+- WhatsApp
+- Messenger
+- Live Quizzes
+- Trading Apps
+
+---
+
+# API Comparison
+
+| API | Data Format | Best Use |
+|------|------------|----------|
+| REST | JSON | General APIs |
+| SOAP | XML | Legacy Systems |
+| GraphQL | Query Based | Flexible Frontend |
+| gRPC | Protocol Buffers | Microservices |
+| WebSocket | Persistent Connection | Real-Time Apps |
+
+---
+
+# Chapter 16: RESTful APIs
+
+REST =
+
+```text
+Representational State Transfer
+```
+
+Most used API architecture today.
+
+---
+
+# JSON Basics
+
+Example:
+
+```json
+{
+  "name": "Pratik",
+  "age": 20
+}
+```
+
+---
+
+## Supported Types
+
+- String
+- Number
+- Boolean
+- Object
+- Array
+- Null
+
+---
+
+# Endpoint
+
+Endpoint =
+
+```text
+Method + Path
+```
+
+Example:
+
+```http
+GET /users
+```
+
+---
+
+# URL Structure
+
+```text
+https://mysite.com/api/v1/users
+```
+
+Components:
+
+| Part | Meaning |
+|--------|---------|
+| mysite.com | Domain |
+| api | API Layer |
+| v1 | Version |
+| users | Resource |
+
+---
+
+# HTTP Methods
+
+---
+
+## GET
+
+Retrieve Data
+
+```http
+GET /users
+```
+
+Returns all users.
+
+---
+
+```http
+GET /users/1
+```
+
+Returns user with ID 1.
+
+---
+
+## POST
+
+Create Data
+
+```http
+POST /users
+```
+
+Body:
+
+```json
+{
+  "name": "Pratik"
+}
+```
+
+---
+
+## PUT
+
+Replace Entire Record
+
+```http
+PUT /users/1
+```
+
+Missing fields become:
+
+```text
+null/default
+```
+
+---
+
+## PATCH
+
+Partial Update
+
+```http
+PATCH /users/1
+```
+
+Only updates selected fields.
+
+---
+
+## DELETE
+
+Delete Resource
+
+```http
+DELETE /users/1
+```
+
+Deletes user with ID 1.
+
+---
+
+# PUT vs PATCH
+
+## PUT
+
+Replaces complete record.
+
+Example:
+
+Current Data:
+
+```json
+{
+  "name": "Pratik",
+  "age": 20
+}
+```
+
+PUT:
+
+```json
+{
+  "name": "John"
+}
+```
+
+Result:
+
+```json
+{
+  "name": "John",
+  "age": null
+}
+```
+
+---
+
+## PATCH
+
+Updates only requested field.
+
+```json
+{
+  "name": "John"
+}
+```
+
+Result:
+
+```json
+{
+  "name": "John",
+  "age": 20
+}
+```
+
+---
+
+# Nested Resources
+
+Entities:
+
+```text
+Users
+Blogs
+Comments
+```
+
+---
+
+## Blog Comments
+
+```http
+GET /blogs/1/comments
+```
+
+---
+
+## User Comments
+
+```http
+GET /users/1/comments
+```
+
+---
+
+# Nesting vs Filtering
+
+## Use Nesting
+
+When relationship is direct.
+
+Example:
+
+```http
+/blogs/1/comments
+```
+
+---
+
+## Use Query Parameters
+
+For:
+
+- Filtering
+- Sorting
+- Searching
+- Pagination
+
+Examples:
+
+```http
+/products?color=red
+
+/blogs?q=java
+
+/blogs?sort=asc
+```
+
+---
+
+# Ways to Send Data
+
+## Path Parameters
+
+Used for:
+
+- IDs
+- Slugs
+
+Example:
+
+```http
+/users/1
+```
+
+---
+
+## Query Parameters
+
+Used for:
+
+- Search
+- Filter
+- Sort
+- Pagination
+
+Example:
+
+```http
+/shops?price=1000
+```
+
+---
+
+## Request Body
+
+Used for:
+
+- Login
+- Signup
+- Sensitive Data
+
+Example:
+
+```json
+{
+  "username":"abc",
+  "password":"123"
+}
+```
+
+---
+
+# Full REST Request Example
+
+```http
+POST /api/v3/users
+```
+
+Headers:
+
+```http
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "name":"Pratik"
+}
+```
+
+---
+
+# Chapter 17: RESTful Responses
+
+---
+
+# Important HTTP Status Codes
+
+## 200 OK
+
+Everything worked successfully.
+
+---
+
+## 201 Created
+
+New entity created.
+
+---
+
+## 204 No Content
+
+Success but no response body.
+
+Mostly used with:
+
+```http
+DELETE
+```
+
+---
+
+## 301 Permanent Redirect
+
+Permanent URL change.
+
+---
+
+## 302 Temporary Redirect
+
+Temporary URL change.
+
+---
+
+## 400 Bad Request
+
+Invalid request data.
+
+---
+
+## 401 Unauthorized
+
+Authentication required.
+
+---
+
+## 403 Forbidden
+
+Access denied.
+
+---
+
+## 404 Not Found
+
+Resource not found.
+
+---
+
+## 500 Internal Server Error
+
+Backend issue.
+
+---
+
+# Status Code Cheat Sheet
+
+| Code | Meaning |
+|--------|---------|
+| 200 | OK |
+| 201 | Created |
+| 204 | No Content |
+| 301 | Permanent Redirect |
+| 302 | Temporary Redirect |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 500 | Internal Server Error |
+
+---
+
+# Response Best Practice
+
+❌ Avoid
+
+```json
+[
+ {}
+]
+```
+
+---
+
+✅ Preferred
+
+```json
+{
+  "users": [
+    {}
+  ]
+}
+```
+
+Benefits:
+
+- Easy Extension
+- Cleaner Structure
+- Future Flexibility
+
+---
+
+# Chapter 18: Database Introduction
+
+Without Database:
+
+```text
+Server Restart
+      ↓
+Data Lost
+```
+
+---
+
+# Why Database?
+
+Stores information permanently.
+
+Examples:
+
+- Users
+- Posts
+- Orders
+- Messages
+
+---
+
+# Types of Databases
+
+## SQL
+
+(Relational Databases)
+
+Examples:
+
+- MySQL
+- PostgreSQL
+
+---
+
+## NoSQL
+
+Examples:
+
+- MongoDB
+- Cassandra
+
+---
+
+# Chapter 19: Relational Database (SQL)
+
+SQL =
+
+```text
+Structured Query Language
+```
+
+Stores data using:
+
+```text
+Tables
+Rows
+Columns
+```
+
+---
+
+# Table Example
+
+Users Table
+
+| ID | First Name | Last Name | Phone |
+|----|------------|------------|--------|
+| 1 | Pratik | Naik | 987654321 |
+
+---
+
+# Important Terms
+
+## Table
+
+Collection of records.
+
+---
+
+## Column
+
+Attributes.
+
+Examples:
+
+```text
+ID
+Name
+Phone
+```
+
+---
+
+## Row
+
+Complete Record.
+
+Example:
+
+```text
+Pratik Naik Record
+```
+
+---
+
+# Naming Convention
+
+Use plural names.
+
+✅ Correct
+
+```text
+users
+posts
+comments
+videos
+```
+
+❌ Avoid
+
+```text
+user
+post
+video
+```
+
+---
+
+# Chapter 20: Database Constraints
+
+Constraints ensure valid data.
+
+---
+
+## UNIQUE
+
+No duplicate values allowed.
+
+Example:
+
+```text
+username
+```
+
+Two users cannot have same username.
+
+---
+
+## NOT NULL
+
+Field cannot be empty.
+
+Example:
+
+```text
+first_name
+```
+
+---
+
+## PRIMARY KEY
+
+Unique identifier of a row.
+
+Example:
+
+```text
+id
+```
+
+Properties:
+
+- Unique
+- Non-null
+- Identifies one record only
+
+---
+
+# Why Primary Key is Important?
+
+Used for:
+
+- Record Identification
+- Relationships
+- Foreign Keys
+- Faster Retrieval
+
+---
+
+# Quick Revision Sheet
+
+```text
+DNS:
+Root → TLD → Authoritative → IP
+
+API:
+Application Communication Layer
+
+REST:
+JSON Based APIs
+
+SOAP:
+XML Based APIs
+
+GraphQL:
+Single Endpoint
+
+gRPC:
+Fast Internal Communication
+
+WebSocket:
+Real-Time Communication
+
+HTTP Methods:
+GET
+POST
+PUT
+PATCH
+DELETE
+
+Response Codes:
+200
+201
+204
+301
+302
+400
+401
+403
+404
+500
+
+Database:
+Permanent Storage
+
+SQL:
+Tables + Rows + Columns
+
+Constraints:
+UNIQUE
+NOT NULL
+PRIMARY KEY
+```
+
+---
+**End of System Design Notes (Part 2)**
