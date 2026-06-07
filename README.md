@@ -3488,3 +3488,1275 @@ LIFO
 **End of System Design Notes (Part 3)** :contentReference[oaicite:0]{index=0}
 
 ![System Design Part 3 Cheat Sheet](assets/system-design-part-3-cheat-sheet.png)
+
+
+# System Design Notes (Part 4)
+
+## Distributed Databases, Replication, Partitioning & CAP Theorem
+
+---
+
+# Chapter 30: Distributed Databases
+
+## Why Do We Need Distributed Databases?
+
+As applications grow:
+
+- Data increases
+- Traffic increases
+- Users increase
+
+Eventually a single database becomes insufficient.
+
+Example:
+
+```text
+100 GB → Fine
+1 TB → Fine
+100 TB → Problem
+```
+
+At some point:
+
+```text
+Vertical Scaling is not enough
+```
+
+We must add more databases.
+
+---
+
+## Problem with Single Database
+
+Consider:
+
+```text
+India Server
+US Server
+```
+
+Both connected to:
+
+```text
+One Database
+```
+
+Initially it works.
+
+As traffic grows:
+
+- High Latency
+- More Load
+- Storage Issues
+- Performance Bottlenecks
+
+---
+
+## Solution
+
+Use:
+
+```text
+Multiple Databases
+```
+
+Example:
+
+```text
+India Server → DB1
+
+US Server → DB2
+```
+
+Benefits:
+
+- Faster Requests
+- Better Maintenance
+- Lower Latency
+- Better Scalability
+
+---
+
+## Two Ways to Scale Databases
+
+### 1. Replication
+
+Copy data across databases.
+
+```text
+DB1 → DB2
+```
+
+---
+
+### 2. Partitioning
+
+Split data across databases.
+
+```text
+Users 1-5000 → DB1
+
+Users 5001-10000 → DB2
+```
+
+---
+
+# Chapter 31: Replication
+
+## What is Replication?
+
+Replication means:
+
+```text
+Creating Copies of Data
+```
+
+across multiple databases.
+
+---
+
+## Why Replication?
+
+### 1. Avoid Single Point of Failure
+
+If one DB fails:
+
+```text
+Use another DB
+```
+
+---
+
+### 2. Increase Availability
+
+Data exists in multiple places.
+
+---
+
+### 3. Improve Performance
+
+Keep databases closer to users.
+
+Example:
+
+```text
+India → Indian DB
+
+US → US DB
+```
+
+---
+
+### 4. Increase Read Throughput
+
+Example:
+
+```text
+1 DB → 10,000 requests/sec
+
+2 DBs → 20,000 requests/sec
+```
+
+---
+
+# Chapter 32: Replication Algorithms
+
+There are three major replication strategies:
+
+```text
+1. Single Leader Replication
+
+2. Multi Leader Replication
+
+3. Leaderless Replication
+```
+
+---
+
+# 1. Single Leader Replication
+
+Architecture:
+
+```text
+        Leader
+       /      \
+      /        \
+Follower1   Follower2
+```
+
+---
+
+## How It Works?
+
+### Write Requests
+
+Always go to:
+
+```text
+Leader
+```
+
+Example:
+
+```text
+Update Profile Picture
+```
+
+Flow:
+
+```text
+Client
+ ↓
+Leader
+ ↓
+Followers
+```
+
+---
+
+## Read Requests
+
+Can be served by:
+
+- Leader
+- Followers
+
+---
+
+# Asynchronous Replication
+
+## Flow
+
+```text
+Client
+ ↓
+Leader Updates Data
+ ↓
+Leader Immediately Responds
+ ↓
+Followers Update Later
+```
+
+---
+
+## Advantages
+
+✅ Fast Response
+
+✅ Better Performance
+
+✅ No Resource Blocking
+
+---
+
+## Disadvantages
+
+❌ Stale Data
+
+Followers may not be updated yet.
+
+Example:
+
+```text
+Leader → Updated
+
+Follower → Old Data
+```
+
+---
+
+# Synchronous Replication
+
+## Flow
+
+```text
+Client
+ ↓
+Leader
+ ↓
+Followers
+ ↓
+Wait For ACK
+ ↓
+Respond To Client
+```
+
+---
+
+## Advantages
+
+✅ Strong Consistency
+
+✅ Easy Leader Election
+
+All nodes always updated.
+
+---
+
+## Disadvantages
+
+❌ Slow
+
+❌ Resource Blocking
+
+❌ Poor Scalability
+
+---
+
+## Which Is Preferred?
+
+```text
+Asynchronous Replication
+```
+
+because modern systems prioritize:
+
+```text
+Performance
+```
+
+over strict consistency.
+
+---
+
+# Adding New Follower
+
+Suppose:
+
+```text
+Leader
+Follower1
+Follower2
+```
+
+and we want:
+
+```text
+Follower3
+```
+
+---
+
+## Step 1
+
+Take Snapshot
+
+```text
+Follower2 Snapshot
+```
+
+---
+
+## Step 2
+
+Copy Snapshot to Follower3
+
+---
+
+## Step 3
+
+Capture Changes Since Snapshot
+
+```text
+Edit Logs
+```
+
+---
+
+## Step 4
+
+Apply Changes to Follower3
+
+---
+
+## Step 5
+
+Connect Follower3 to Leader
+
+Now replication starts normally.
+
+---
+
+# FSImage and Edit Logs
+
+### FSImage
+
+Contains:
+
+```text
+Full Snapshot
+```
+
+---
+
+### Edit Logs
+
+Contains:
+
+```text
+Changes After Snapshot
+```
+
+---
+
+# Leader Failure
+
+Suppose:
+
+```text
+Leader ❌
+```
+
+---
+
+## Leader Election
+
+Choose follower having:
+
+```text
+Latest Timestamp
+```
+
+Example:
+
+```text
+Follower1 → Latest
+
+Follower2 → Older
+```
+
+Then:
+
+```text
+Follower1 → New Leader
+```
+
+---
+
+# 2. Multi-Leader Replication
+
+Instead of:
+
+```text
+One Leader
+```
+
+we have:
+
+```text
+Leader1
+Leader2
+Leader3
+```
+
+---
+
+## Architecture
+
+```text
+Data Center 1
+     ↓
+ Leader1
+     ↓
+Followers
+
+Data Center 2
+     ↓
+ Leader2
+     ↓
+Followers
+```
+
+---
+
+## Benefits
+
+### Better Availability
+
+Multiple leaders exist.
+
+---
+
+### Better Performance
+
+Local leader handles local requests.
+
+---
+
+### Collaborative Editing
+
+Examples:
+
+- Google Docs
+- Google Sheets
+
+Multiple users can update simultaneously.
+
+---
+
+# Conflict Problem
+
+Example:
+
+File Name:
+
+```text
+A
+```
+
+User1 changes:
+
+```text
+A → B
+```
+
+User2 changes:
+
+```text
+A → C
+```
+
+Conflict arises.
+
+---
+
+# Conflict Resolution Techniques
+
+---
+
+## 1. Last Write Wins
+
+Latest update wins.
+
+Example:
+
+```text
+B at 10:00
+
+C at 10:01
+```
+
+Result:
+
+```text
+C
+```
+
+wins.
+
+---
+
+## 2. Higher Leader ID Wins
+
+Example:
+
+```text
+Leader1 → ID 10
+
+Leader2 → ID 11
+```
+
+Result:
+
+```text
+Leader2 Wins
+```
+
+---
+
+## 3. User Resolves Conflict
+
+Similar to:
+
+```text
+Git Merge Conflict
+```
+
+User decides final version.
+
+---
+
+# 3. Leaderless Replication
+
+No leader exists.
+
+Architecture:
+
+```text
+Node1
+Node2
+Node3
+```
+
+All equal.
+
+---
+
+## Write Request
+
+Request goes to:
+
+```text
+Node1
+Node2
+Node3
+```
+
+simultaneously.
+
+---
+
+## Read Request
+
+Reads data from:
+
+```text
+Multiple Nodes
+```
+
+and chooses correct result.
+
+---
+
+# Problem
+
+Different nodes may contain:
+
+```text
+Updated Data
+
+Stale Data
+```
+
+at the same time.
+
+---
+
+# Quorum Concept
+
+Used to decide success.
+
+---
+
+## Formula
+
+### N
+
+Total Nodes
+
+Example:
+
+```text
+N = 3
+```
+
+---
+
+### Write Quorum (W)
+
+Need confirmations from:
+
+```text
+> N/2
+```
+
+nodes.
+
+---
+
+### Read Quorum (R)
+
+Need responses from:
+
+```text
+> N/2
+```
+
+nodes.
+
+---
+
+## Example
+
+```text
+Node1 → Success
+
+Node2 → Success
+
+Node3 → Pending
+```
+
+Since:
+
+```text
+2/3 > N/2
+```
+
+Operation succeeds.
+
+---
+
+## Why Quorum?
+
+Avoid waiting for every node.
+
+Improves:
+
+- Performance
+- Availability
+
+---
+
+## Databases Using Leaderless Replication
+
+- Cassandra
+- DynamoDB
+- Riak
+
+---
+
+# Replication Comparison
+
+| Feature | Single Leader | Multi Leader | Leaderless |
+|----------|-------------|-------------|------------|
+| Leaders | 1 | Multiple | None |
+| Write Speed | Medium | Fast | Fast |
+| Complexity | Low | High | High |
+| Conflict Handling | Easy | Difficult | Moderate |
+| Availability | Medium | High | Very High |
+
+---
+
+# Chapter 33: Partitioning (Sharding)
+
+## Why Partitioning?
+
+Replication copies all data.
+
+Problem:
+
+```text
+Data Too Large
+```
+
+Example:
+
+```text
+100 TB
+```
+
+Cannot fit into a single database.
+
+---
+
+## Solution
+
+Split Data.
+
+Example:
+
+```text
+Partition 1
+Partition 2
+Partition 3
+```
+
+Each stores only a portion.
+
+---
+
+# Partitioning Rules
+
+## Rule 1
+
+All partitions together must contain:
+
+```text
+Complete Dataset
+```
+
+No data loss.
+
+---
+
+## Rule 2
+
+Data must be:
+
+```text
+Evenly Distributed
+```
+
+Avoid imbalance.
+
+---
+
+# Hotspot Problem
+
+Suppose:
+
+```text
+P1 → 100 Requests/sec
+
+P2 → 10,000 Requests/sec
+```
+
+Then:
+
+```text
+P2 = Hotspot
+```
+
+---
+
+## Hotspot Meaning
+
+A partition receiving much higher traffic than others.
+
+Problems:
+
+- Slow Performance
+- Failures
+- Resource Exhaustion
+
+---
+
+# Chapter 34: Partition Strategies
+
+---
+
+# 1. Key-Based Partitioning
+
+Partition using primary key.
+
+Example:
+
+```text
+Users 1-50000
+    ↓
+Partition 1
+
+Users 50001-100000
+    ↓
+Partition 2
+```
+
+---
+
+## Advantages
+
+Simple.
+
+---
+
+## Problems
+
+May create hotspots.
+
+---
+
+# 2. Hash-Based Partitioning
+
+Apply hash function.
+
+Example:
+
+```text
+User1 → Hash → P1
+
+User2 → Hash → P2
+
+User3 → Hash → P1
+```
+
+---
+
+## Benefits
+
+Better Distribution.
+
+---
+
+## Problems
+
+Still possible to create hotspots.
+
+---
+
+# Secondary Indexes
+
+Used to improve searching.
+
+Example Product Table:
+
+```text
+Name
+Color
+Material
+Price
+```
+
+Create indexes on:
+
+```text
+Color
+Material
+```
+
+---
+
+## Benefit
+
+Instead of scanning:
+
+```text
+Entire Table
+```
+
+search index first.
+
+---
+
+# 3. Partitioning Using Secondary Indexes
+
+Each partition maintains its own indexes.
+
+Example:
+
+```text
+P1 → Blue Cars
+P2 → Red Cars
+```
+
+---
+
+## Benefit
+
+Faster Queries.
+
+---
+
+## Problem
+
+Request still sent to many partitions.
+
+---
+
+# 4. Global Secondary Index
+
+Instead of:
+
+```text
+Indexes In Every Partition
+```
+
+Maintain:
+
+```text
+One Global Index
+```
+
+---
+
+## Example
+
+Blue Cars:
+
+```text
+P1 → IDs 209,305
+
+P2 → IDs 509,609
+```
+
+Global index knows this.
+
+---
+
+## Benefits
+
+Faster Reads.
+
+---
+
+## Drawbacks
+
+Writes become harder.
+
+Because:
+
+```text
+Data + Global Index
+
+Both Need Updates
+```
+
+---
+
+# Partition Strategy Comparison
+
+| Strategy | Advantage | Disadvantage |
+|-----------|------------|--------------|
+| Key-Based | Simple | Hotspots |
+| Hash-Based | Better Distribution | Still Hotspots |
+| Secondary Index | Fast Search | More Requests |
+| Global Index | Fast Reads | Complex Writes |
+
+---
+
+# Chapter 35: CAP Theorem
+
+One of the most important System Design concepts.
+
+---
+
+## CAP Stands For
+
+### C
+
+Consistency
+
+---
+
+### A
+
+Availability
+
+---
+
+### P
+
+Partition Tolerance
+
+---
+
+# Consistency
+
+Every user sees:
+
+```text
+Latest Data
+```
+
+Example:
+
+```text
+Bank Balance Updated
+```
+
+Everyone sees updated value.
+
+---
+
+# Availability
+
+Every request gets a response.
+
+Even if response is:
+
+```text
+Old/Stale Data
+```
+
+---
+
+# Partition Tolerance
+
+System continues working even when:
+
+```text
+Network Failures Occur
+```
+
+between nodes.
+
+---
+
+# CAP Theorem Rule
+
+A distributed system can guarantee only:
+
+```text
+Any Two
+```
+
+out of:
+
+```text
+Consistency
+Availability
+Partition Tolerance
+```
+
+---
+
+# CA System
+
+Provides:
+
+```text
+Consistency
+Availability
+```
+
+No Partition Tolerance.
+
+---
+
+## Example
+
+Single Database System
+
+```text
+One Node Only
+```
+
+---
+
+# CP System
+
+Provides:
+
+```text
+Consistency
+Partition Tolerance
+```
+
+Sacrifices:
+
+```text
+Availability
+```
+
+---
+
+## Behavior
+
+If node doesn't have latest data:
+
+```text
+Request Rejected
+```
+
+or redirected.
+
+---
+
+## Example
+
+Banking Systems
+
+Transactions require:
+
+```text
+Correct Data
+```
+
+---
+
+# AP System
+
+Provides:
+
+```text
+Availability
+Partition Tolerance
+```
+
+Sacrifices:
+
+```text
+Consistency
+```
+
+---
+
+## Behavior
+
+Even if data is stale:
+
+```text
+Response Returned
+```
+
+---
+
+## Example
+
+Instagram
+
+If a post appears:
+
+```text
+2 seconds later
+```
+
+it is acceptable.
+
+---
+
+# CAP Theorem Summary
+
+| Type | Provides | Sacrifices | Example |
+|--------|-----------|------------|----------|
+| CA | Consistency + Availability | Partition Tolerance | Single DB |
+| CP | Consistency + Partition Tolerance | Availability | Banking |
+| AP | Availability + Partition Tolerance | Consistency | Instagram |
+
+---
+
+# Final Revision Sheet
+
+```text
+Distributed Database
+=
+Multiple Databases
+
+Replication
+=
+Copy Data
+
+Partitioning
+=
+Split Data
+
+Replication Types:
+1. Single Leader
+2. Multi Leader
+3. Leaderless
+
+Quorum:
+Need > N/2 Responses
+
+Partitioning Goals:
+1. Complete Data
+2. Even Distribution
+
+Hotspot:
+Overloaded Partition
+
+Partition Strategies:
+- Key Based
+- Hash Based
+- Secondary Index
+- Global Index
+
+CAP Theorem:
+C = Consistency
+A = Availability
+P = Partition Tolerance
+
+Can Choose Only Two
+
+CP → Banking
+
+AP → Instagram
+
+CA → Single Database
+```
+
+---
+**End of System Design Notes (Part 4)** :contentReference[oaicite:0]{index=0}
+
+![System Design Part 4 Cheat Sheet](assets/system-design-part-4-cheat-sheet.png)
+
+
